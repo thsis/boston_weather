@@ -1,5 +1,5 @@
 """
-### What does this script?
+Obtain weather data from 2001-2008 for Boston Airport.
 
 This script scrapes the web for weather data, interfacing with the Dark Sky API
 in order to obtain data about temperature and weather conditions measured at
@@ -32,7 +32,8 @@ def ping_darksky(time, key):
             + tempMax: maximum temperature in degrees Fahrenheit at that date.
             + summary: weather summary of that date.
             + desc: single word description of weather conditions.
-            + cloud_cover: float denoting the proportion of the skies surface that is obscured by clouds
+            + cloud_cover: float denoting the proportion of the skies surface
+              that is obscured by clouds
 
     """
     with forecast(key, *BOSTON, time=time.isoformat()) as boston:
@@ -68,11 +69,12 @@ feature_columns = ["day", "tempMin", "tempMax", "summary", "desc",
 weather_boston = pd.DataFrame(columns=feature_columns)
 dataout = os.path.join("data", "weather_boston_daily.csv")
 # Define start variables for the loop.
-start = datetime(2001, 4, 2, 12)
+start = datetime(2001, 1, 1, 12)
 keygen = switch_key()
 key = next(keygen)
 
-for day in tqdm(pd.date_range(start, periods=4004)):
+print("Start data collection.")
+for day in tqdm(pd.date_range(start, periods=4050)):
     try:
         row = ping_darksky(key=key, time=day)
         weather_boston = weather_boston.append(row, ignore_index=True)

@@ -40,12 +40,8 @@ Note that this might be different if you are using `IDE`'s like `PyCharm`, `IDLE
 
 ## Running this script
 
-1. Get a key from https://darksky.net/dev.
-2. install the `darksky`-module from github, since this seems to be the only version that, at the time of writing this, is not broken:
-```
-pip install git+https://github.com/zachwill/darksky.git --user
-```
-3. Save your key in the `key.txt`-file. Of course I highly discourage to **add multiple keys** from different people to circumvent the access limitations for free users.
+1. Get a key from https://darksky.net/dev and add your creditcard information. The whole batch of data should cost you no more than US$ 0.04.
+2. Save your key in the `key.txt`-file. Of course I highly discourage to **add multiple keys** from different people to circumvent the access limitations for free users - because stealing is evil.
 4. run the `weather.py` script.
 
 <h2 id="weather">weather</h2>
