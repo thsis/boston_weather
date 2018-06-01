@@ -90,6 +90,9 @@ for day in tqdm(pd.date_range(start, periods=4050)):
             warnings.warn(
                 "End of keys reached. Your dataset might be incomplete.")
             break
+    except AttributeError:
+        print("Dropped:", day)
+        continue
     # Save data in each iteration. This way you should end up with something.
     finally:
         weather_boston.to_csv(dataout)
