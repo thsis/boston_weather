@@ -11,6 +11,7 @@ import os
 import warnings
 import requests
 import pandas as pd
+import numpy as np
 from darksky import forecast
 from datetime import datetime
 from tqdm import tqdm
@@ -38,11 +39,11 @@ def ping_darksky(time, key):
     """
     with forecast(key, *BOSTON, time=time.isoformat()) as boston:
         fetch = {'day': time,
-                 'tempMin': boston.daily[0].temperatureMin,
-                 'tempMax': boston.daily[0].temperatureMax,
-                 'summary': boston.daily[0].summary,
-                 'desc': boston.daily[0].icon,
-                 'cloud_cover': boston.daily[0].cloudCover}
+                 'tempMin': getattr(boston.daily[0], 'temperatureMin', np.nan),
+                 'tempMax': getattr(boston.daily[0], 'temperatureMax', np.nan),
+                 'summary': getattr(boston.daily[0], 'summary', np.nan),
+                 'desc': getattr(boston.daily[0], 'icon', np.nan),
+                 'cloud_cover': getattr(boston.daily[0], 'cloudCover', np.nan)}
     return fetch
 
 
@@ -90,9 +91,6 @@ for day in tqdm(pd.date_range(start, periods=4050)):
             warnings.warn(
                 "End of keys reached. Your dataset might be incomplete.")
             break
-    except AttributeError:
-        print("Dropped:", day)
-        continue
     # Save data in each iteration. This way you should end up with something.
     finally:
         weather_boston.to_csv(dataout)
