@@ -37,13 +37,15 @@ def ping_darksky(time, key):
               that is obscured by clouds
 
     """
-    with forecast(key, *BOSTON, time=time.isoformat()) as boston:
-        fetch = {'day': time,
-                 'tempMin': getattr(boston.daily[0], 'temperatureMin', np.nan),
-                 'tempMax': getattr(boston.daily[0], 'temperatureMax', np.nan),
-                 'summary': getattr(boston.daily[0], 'summary', np.nan),
-                 'desc': getattr(boston.daily[0], 'icon', np.nan),
-                 'cloud_cover': getattr(boston.daily[0], 'cloudCover', np.nan)}
+    boston = forecast(key, *BOSTON, time=time.isoformat())
+
+    fetch = {
+        'day': time,
+        'tempMin': boston["daily"]["data"][0].get('temperatureMin', np.nan),
+        'tempMax': boston["daily"]["data"][0].get('temperatureMax', np.nan),
+        'summary': boston["daily"]["data"][0].get('summary', np.nan),
+        'desc': boston["daily"]["data"][0].get('icon', np.nan),
+        'cloudCover': boston["daily"]["data"][0].get('cloudCover', np.nan)}
     return fetch
 
 
@@ -55,44 +57,48 @@ def switch_key():
     * Yields:
         + Key to access Dark Sky API.
     """
-    with open("secret_key.txt", 'r') as f:
-        keys = f.read().splitlines()
+    with open("secret_key.txt", 'r') as key_file:
+        api_keys = key_file.read().splitlines()
 
-    for key in keys:
-        yield key
+    for api_key in api_keys:
+        yield api_key
 
 
 # Define location.
-BOSTON = (42.3601, 71.0589)
+BOSTON = (42.3601, -71.0589)
 # Set up dataframe and path to which it will be saved.
-feature_columns = ["day", "tempMin", "tempMax", "summary", "desc",
-                   "cloud_cover"]
-weather_boston = pd.DataFrame(columns=feature_columns)
-dataout = os.path.join("data", "weather_boston_daily.csv")
+COLUMNS = ["day", "tempMin", "tempMax", "summary", "desc", "cloudCover"]
+WEATHER_BOSTON = pd.DataFrame(columns=COLUMNS)
+DATAOUT = os.path.join("data", "weather_boston_daily.csv")
 # Define start variables for the loop.
-start = datetime(2001, 1, 1, 12)
-keygen = switch_key()
-key = next(keygen)
+START = datetime(2001, 1, 1, 12)
+KEYGEN = switch_key()
+KEY = next(KEYGEN)
 
-print("Start data collection.")
-for day in tqdm(pd.date_range(start, periods=4050)):
-    try:
-        row = ping_darksky(key=key, time=day)
-        weather_boston = weather_boston.append(row, ignore_index=True)
-    # If the server refuses to connect, change the key.
-    except requests.exceptions.HTTPError:
+if __name__ == "__main__":
+    print("Start data collection.")
+    for day in tqdm(pd.date_range(START, periods=4050)):
         try:
-            key = next(keygen)
-            row = ping_darksky(key=key, time=day)
-            weather_boston = weather_boston.append(row, ignore_index=True)
-            continue
-        # If there are no keys left, break the loop prematurely.
-        except StopIteration:
-            warnings.warn(
-                "End of keys reached. Your dataset might be incomplete.")
-            break
-    # Save data in each iteration. This way you should end up with something.
-    finally:
-        weather_boston.to_csv(dataout)
+            row = ping_darksky(key=KEY, time=day)
+            WEATHER_BOSTON = WEATHER_BOSTON.append(row, ignore_index=True)
+        # If the server refuses to connect, change the key.
+        except requests.exceptions.HTTPError:
+            try:
+                KEY = next(KEYGEN)
+                row = ping_darksky(key=KEY, time=day)
+                WEATHER_BOSTON = WEATHER_BOSTON.append(row, ignore_index=True)
+                continue
+            # If there are no keys left, break the loop prematurely.
+            except StopIteration:
+                warnings.warn(
+                    "End of keys reached. Your dataset might be incomplete.")
+                break
+        # Save data in each iteration.
+        # This way you should end up with something at least.
+        finally:
+            WEATHER_BOSTON.to_csv(DATAOUT)
 
-print("Wrote {} rows".format(weather_boston.shape[0]))
+    print("Wrote {} rows".format(WEATHER_BOSTON.shape[0]))
+
+
+fetch
